@@ -28,15 +28,17 @@ Open `~/.claude/settings.json` and add the `hooks` block below (create it if it 
         ]
       }
     ],
-    // FOR VS CODE USERS ONLY — the Notification hook above doesn't fire in the
-    // VS Code extension. This Stop hook speaks only when you've tabbed away from
-    // VS Code (not after every reply). Delete this block if you only use the terminal.
-    "Stop": [
+    // FOR VS CODE USERS — the Notification hook above doesn't fire in the VS Code
+    // extension. This fires right before a multiple-choice prompt appears, and
+    // speaks only when you've tabbed away from VS Code. Delete it if you only use
+    // the terminal.
+    "PreToolUse": [
       {
+        "matcher": "AskUserQuestion",
         "hooks": [
           {
             "type": "command",
-            "command": "[ -n \"$VSCODE_PID\" ] || exit 0; front=$(lsappinfo info -only name \"$(lsappinfo front)\" 2>/dev/null | sed -E 's/.*\"LSDisplayName\"=\"([^\"]*)\".*/\\1/'); case \"$front\" in Code|iTerm2|Terminal) : ;; *) say -v Daniel \"[put your name] [[slnc 400]] your input is required, sir\" 2>/dev/null ;; esac; true"
+            "command": "front=$(lsappinfo info -only name \"$(lsappinfo front)\" 2>/dev/null | sed -E 's/.*\"LSDisplayName\"=\"([^\"]*)\".*/\\1/'); case \"$front\" in Code|iTerm2|Terminal) : ;; *) say -v Daniel \"[put your name] [[slnc 400]] your input is required, sir\" 2>/dev/null ;; esac; true"
           }
         ]
       }
@@ -45,7 +47,9 @@ Open `~/.claude/settings.json` and add the `hooks` block below (create it if it 
 }
 ```
 
-That's it — the next session will speak whenever Claude needs your input. Terminal-only users can drop the `Stop` block; VS Code users should keep both.
+That's it — the next session will speak whenever Claude needs your input. Terminal-only users can drop the `PreToolUse` block; VS Code users should keep both.
+
+> **Why `PreToolUse` for VS Code?** In the VS Code extension the `Notification` event doesn't fire, so the terminal hook stays silent there. A multiple-choice prompt is the `AskUserQuestion` *tool*, so matching `PreToolUse` to it lets us play the alert the instant that prompt appears — the moment your input is needed.
 
 What the pieces mean:
 
