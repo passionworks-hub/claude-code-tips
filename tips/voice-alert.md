@@ -29,12 +29,12 @@ Open `~/.claude/settings.json` and add the `hooks` block below (create it if it 
       }
     ],
     // FOR VS CODE USERS — the Notification hook above doesn't fire in the VS Code
-    // extension. This fires right before a multiple-choice prompt appears, and
-    // speaks only when you've tabbed away from VS Code. Delete it if you only use
-    // the terminal.
+    // extension. This fires right before Claude waits on you — a multiple-choice
+    // prompt (AskUserQuestion) or a plan approval (ExitPlanMode) — and speaks only
+    // when you've tabbed away from VS Code. Delete it if you only use the terminal.
     "PreToolUse": [
       {
-        "matcher": "AskUserQuestion",
+        "matcher": "AskUserQuestion|ExitPlanMode",
         "hooks": [
           {
             "type": "command",
@@ -49,7 +49,7 @@ Open `~/.claude/settings.json` and add the `hooks` block below (create it if it 
 
 That's it — the next session will speak whenever Claude needs your input. Terminal-only users can drop the `PreToolUse` block; VS Code users should keep both.
 
-> **Why `PreToolUse` for VS Code?** In the VS Code extension the `Notification` event doesn't fire, so the terminal hook stays silent there. A multiple-choice prompt is the `AskUserQuestion` *tool*, so matching `PreToolUse` to it lets us play the alert the instant that prompt appears — the moment your input is needed.
+> **Why `PreToolUse` for VS Code?** In the VS Code extension the `Notification` event doesn't fire, so the terminal hook stays silent there. The two moments Claude explicitly waits on you are *tools*: `AskUserQuestion` (a multiple-choice prompt) and `ExitPlanMode` (a plan presented for approval). Matching `PreToolUse` to both (`AskUserQuestion|ExitPlanMode`) plays the alert the instant either appears — the moment your input is needed. Add more tool names to the matcher to alert on other actions too.
 
 What the pieces mean:
 
