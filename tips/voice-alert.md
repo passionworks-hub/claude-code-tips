@@ -12,11 +12,12 @@ Tired of missing the moment Claude Code stops and waits for your input? Replace 
 
 ## Setup (macOS)
 
-Open `~/.claude/settings.json` and add a `Notification` hook (create the `hooks` block if it doesn't exist):
+Open `~/.claude/settings.json` and add the `hooks` block below (create it if it doesn't exist). Replace `[put your name]` with your own name:
 
-```json
+```jsonc
 {
   "hooks": {
+    // Fires in a plain terminal when Claude needs your input
     "Notification": [
       {
         "hooks": [
@@ -26,12 +27,25 @@ Open `~/.claude/settings.json` and add a `Notification` hook (create the `hooks`
           }
         ]
       }
+    ],
+    // FOR VS CODE USERS ONLY — the Notification hook above doesn't fire in the
+    // VS Code extension. This Stop hook speaks only when you've tabbed away from
+    // VS Code (not after every reply). Delete this block if you only use the terminal.
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ -n \"$VSCODE_PID\" ] || exit 0; front=$(lsappinfo info -only name \"$(lsappinfo front)\" 2>/dev/null | sed -E 's/.*\"LSDisplayName\"=\"([^\"]*)\".*/\\1/'); case \"$front\" in Code|iTerm2|Terminal) : ;; *) say -v Daniel \"[put your name] [[slnc 400]] your input is required, sir\" 2>/dev/null ;; esac; true"
+          }
+        ]
+      }
     ]
   }
 }
 ```
 
-Replace `[put your name]` with your own name. That's it — the next session will speak whenever Claude needs your input.
+That's it — the next session will speak whenever Claude needs your input. Terminal-only users can drop the `Stop` block; VS Code users should keep both.
 
 What the pieces mean:
 
@@ -126,29 +140,6 @@ Hooks fire on more than just `Notification`. Give each event its own audio ident
 ```
 
 Now "your input is required" means *waiting on you*, and a sung "All done" means *task finished* — you can tell them apart from across the room.
-
-## ⚠️ Using it in VS Code
-
-Inside the **VS Code extension**, the `Notification` hook above **doesn't fire** (it works fine in a plain terminal). Use a `Stop` hook instead — and make it *focus-aware* so it only speaks when you've tabbed away from VS Code, not after every reply:
-
-```json
-{
-  "hooks": {
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "[ -n \"$VSCODE_PID\" ] || exit 0; front=$(lsappinfo info -only name \"$(lsappinfo front)\" 2>/dev/null | sed -E 's/.*\"LSDisplayName\"=\"([^\"]*)\".*/\\1/'); case \"$front\" in Code|iTerm2|Terminal) : ;; *) say -v Daniel \"[put your name] [[slnc 400]] your input is required, sir\" 2>/dev/null ;; esac; true"
-          }
-        ]
-      }
-    ]
-  }
-}
-```
-
-Keep *both* hooks in your `settings.json` — `Notification` covers terminal sessions, and the `Stop` hook (gated on `VSCODE_PID`) covers VS Code without doubling up in the terminal.
 
 ### Prefer a chime over a voice?
 macOS ships with classic system sounds too:
