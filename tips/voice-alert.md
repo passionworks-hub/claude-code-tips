@@ -29,9 +29,22 @@ Open `~/.claude/settings.json` and add the `hooks` block below (create it if it 
       }
     ],
     // FOR VS CODE USERS — the Notification hook above doesn't fire in the VS Code
-    // extension. This fires right before Claude waits on you — a multiple-choice
-    // prompt (AskUserQuestion) or a plan approval (ExitPlanMode) — and speaks only
-    // when you've tabbed away from VS Code. Delete it if you only use the terminal.
+    // extension. PermissionRequest catches every prompt where Claude asks to run a
+    // tool it needs your approval for (Bash, WebFetch, Edit, Write, …) and speaks
+    // only when you've tabbed away from VS Code. Delete it if you only use the terminal.
+    "PermissionRequest": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "front=$(lsappinfo info -only name \"$(lsappinfo front)\" 2>/dev/null | sed -E 's/.*\"LSDisplayName\"=\"([^\"]*)\".*/\\1/'); case \"$front\" in Code|iTerm2|Terminal) : ;; *) say -v Daniel \"[put your name] [[slnc 400]] your input is required, sir\" 2>/dev/null ;; esac; true"
+          }
+        ]
+      }
+    ],
+    // ALSO FOR VS CODE — plan approvals (ExitPlanMode) and multiple-choice prompts
+    // (AskUserQuestion) aren't permission dialogs, so PermissionRequest skips them.
+    // This block covers those two. Same "only when away" guard.
     "PreToolUse": [
       {
         "matcher": "AskUserQuestion|ExitPlanMode",
